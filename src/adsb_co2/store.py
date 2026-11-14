@@ -44,6 +44,7 @@ class Store:
             password=c.db_password,
             connect_timeout=3,
             application_name="adsb-co2",
+            autocommit=True,  # else conn.transaction() nests in a never-committed implicit tx
         )
         self.conn.execute("SELECT set_config('timezone', %s, false)", (c.tz,))
         self.conn.execute(SCHEMA)
