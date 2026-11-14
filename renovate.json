@@ -1,0 +1,25 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices"],
+  "minimumReleaseAge": "14 days",
+  "lockFileMaintenance": { "enabled": true },
+  "packageRules": [
+    {
+      "description": "Automerge after CI: patch-level dev dependencies",
+      "matchDepTypes": ["dependency-groups"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true
+    },
+    {
+      "description": "Automerge after CI: GitHub Actions (non-major)",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
+      "automerge": true
+    },
+    {
+      "description": "OpenAP changes the emissions numbers: always a reviewed PR, recompute is a deliberate step",
+      "matchPackageNames": ["openap"],
+      "automerge": false
+    }
+  ]
+}
