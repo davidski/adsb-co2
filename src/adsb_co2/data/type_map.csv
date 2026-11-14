@@ -1,0 +1,230 @@
+type,maps_to,notes
+A109,helicopter_medium,class rate (kg/h x time in area)
+A119,helicopter_medium,class rate (kg/h x time in area)
+A124,b744,An-124 392 t; 747-400 397 t
+A139,helicopter_medium,class rate (kg/h x time in area)
+A169,helicopter_medium,class rate (kg/h x time in area)
+A306,b763,A300-600 171 t; 767-300ER 159 t (OpenAP synonym a332 230 t is too heavy)
+A310,b763,A310 164 t; 767-300ER 159 t (OpenAP synonym a318 68 t is far too light)
+A338,a333,A330-800 251 t; A330-300 242 t
+A339,a333,A330-900 251 t; A330-300 242 t
+A345,a343,A340-500 372 t; A340-300 276 t (4-engine)
+A346,a343,A340-600 380 t; A340-300 276 t (4-engine)
+A35K,a359,A350-1000 316 t; A350-900 280 t
+AA5,piston_single,class rate (kg/h x time in area)
+AC90,turboprop_twin,class rate (kg/h x time in area)
+AC95,turboprop_twin,class rate (kg/h x time in area)
+AS50,helicopter_light_turbine,class rate (kg/h x time in area)
+AS55,helicopter_light_turbine,class rate (kg/h x time in area)
+AS65,helicopter_medium,class rate (kg/h x time in area)
+ASTR,c550,"IAI Astra, ~11.2 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+AT43,turboprop_regional,class rate (kg/h x time in area)
+AT44,turboprop_regional,class rate (kg/h x time in area)
+AT45,turboprop_regional,class rate (kg/h x time in area)
+AT46,turboprop_regional,class rate (kg/h x time in area)
+AT72,turboprop_regional,class rate (kg/h x time in area)
+AT73,turboprop_regional,class rate (kg/h x time in area)
+AT75,turboprop_regional,class rate (kg/h x time in area)
+AT76,turboprop_regional,class rate (kg/h x time in area)
+B06,helicopter_light_turbine,class rate (kg/h x time in area)
+B06T,helicopter_light_turbine,class rate (kg/h x time in area)
+B190,turboprop_twin,class rate (kg/h x time in area)
+B212,helicopter_medium,class rate (kg/h x time in area)
+B222,helicopter_medium,class rate (kg/h x time in area)
+B350,turboprop_twin,class rate (kg/h x time in area)
+B407,helicopter_light_turbine,class rate (kg/h x time in area)
+B412,helicopter_medium,class rate (kg/h x time in area)
+B427,helicopter_medium,class rate (kg/h x time in area)
+B429,helicopter_medium,class rate (kg/h x time in area)
+B505,helicopter_light_turbine,class rate (kg/h x time in area)
+B712,e190,717-200 50 t; E190 50 t
+B733,b734,737-300 63 t; 737-400 68 t
+B735,b734,737-500 52 t; 737-400 68 t
+B742,b744,747-200/300 377 t; 747-400 397 t
+B753,b752,757-300 123 t; 757-200 116 t
+B762,b763,767-200 142 t
+B764,b763,767-400ER 204 t; 767-300ER 159 t
+B77L,b77w,777-200LR 347 t; 777-300ER 352 t
+B78X,b789,787-10 254 t; 787-9 254 t
+BCS1,a318,A220-100 61 t; A318 68 t
+BCS3,a318,A220-300 71 t; A318 68 t
+BE10,turboprop_twin,class rate (kg/h x time in area)
+BE20,turboprop_twin,class rate (kg/h x time in area)
+BE30,turboprop_twin,class rate (kg/h x time in area)
+BE33,piston_single,class rate (kg/h x time in area)
+BE35,piston_single,class rate (kg/h x time in area)
+BE36,piston_single,class rate (kg/h x time in area)
+BE40,c550,"Beechjet 400, ~7.3 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+BE55,piston_twin,class rate (kg/h x time in area)
+BE58,piston_twin,class rate (kg/h x time in area)
+BE60,piston_twin,class rate (kg/h x time in area)
+BE76,piston_twin,class rate (kg/h x time in area)
+BE99,turboprop_twin,class rate (kg/h x time in area)
+BE9L,turboprop_twin,class rate (kg/h x time in area)
+BE9T,turboprop_twin,class rate (kg/h x time in area)
+C140,piston_single,class rate (kg/h x time in area)
+C150,piston_single,class rate (kg/h x time in area)
+C152,piston_single,class rate (kg/h x time in area)
+C172,piston_single,class rate (kg/h x time in area)
+C177,piston_single,class rate (kg/h x time in area)
+C182,piston_single,class rate (kg/h x time in area)
+C206,piston_single,class rate (kg/h x time in area)
+C208,turboprop_single,class rate (kg/h x time in area)
+C20T,turboprop_single,class rate (kg/h x time in area)
+C210,piston_single,class rate (kg/h x time in area)
+C25A,c550,"Citation CJ2, ~5.7 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+C25B,c550,"Citation CJ3, ~6.3 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+C25C,c550,"Citation CJ4, ~7.8 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+C25M,c550,"Citation M2, ~4.8 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+C310,piston_twin,class rate (kg/h x time in area)
+C337,piston_twin,class rate (kg/h x time in area)
+C340,piston_twin,class rate (kg/h x time in area)
+C402,piston_twin,class rate (kg/h x time in area)
+C414,piston_twin,class rate (kg/h x time in area)
+C421,piston_twin,class rate (kg/h x time in area)
+C425,turboprop_twin,class rate (kg/h x time in area)
+C441,turboprop_twin,class rate (kg/h x time in area)
+C500,c550,"Citation I, ~5.4 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+C501,c550,"Citation I/SP, ~5.4 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+C510,c550,"Citation Mustang, ~3.9 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+C525,c550,"Citation CJ1, ~4.8 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+C560,c550,"Citation V/Ultra/Encore, ~7.5 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+C56X,c550,"Citation Excel/XLS, ~9.2 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+C650,c550,"Citation III/VI/VII, ~10.0 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+C680,e145,"Citation Sovereign, ~13.7 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+C68A,e145,"Citation Latitude, ~13.8 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+C700,e145,"Citation Longitude, ~17.1 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+C750,e145,"Citation X, ~16.8 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+C82S,piston_single,class rate (kg/h x time in area)
+CL30,e145,"Challenger 300, ~17.6 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+CL35,e145,"Challenger 350, ~18.4 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+CL60,e145,"Challenger 600 series, ~21.8 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+COL4,piston_single,class rate (kg/h x time in area)
+CRJ1,e145,CRJ100 21.5 t; ERJ-145 22 t
+CRJ2,e145,CRJ200 23 t; ERJ-145 22 t
+CRJ7,e170,CRJ700 34 t; E170 34.2 t
+CRJX,e75l,CRJ1000 41 t; E175 long 38.8 t
+D328,turboprop_regional,class rate (kg/h x time in area)
+DA20,piston_single,class rate (kg/h x time in area)
+DA40,piston_single,class rate (kg/h x time in area)
+DA42,piston_single,twin diesel burns far less than a piston twin; single-piston rate is closer
+DC10,a343,DC-10 260 t trijet; A340-300 276 t
+DH8A,turboprop_twin,class rate (kg/h x time in area)
+DH8B,turboprop_twin,class rate (kg/h x time in area)
+DH8C,turboprop_regional,class rate (kg/h x time in area)
+DH8D,turboprop_regional,class rate (kg/h x time in area)
+DHC6,turboprop_twin,class rate (kg/h x time in area)
+E120,turboprop_twin,class rate (kg/h x time in area)
+E135,e145,ERJ-135 20 t; ERJ-145 22 t
+E290,e195,E190-E2 56 t; E195 51 t
+E295,e195,E195-E2 62 t; E195 51 t
+E35L,e145,"Legacy 600, ~22.0 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+E50P,c550,"Phenom 100, ~4.8 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+E545,e145,"Legacy 450, ~15.6 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+E550,e145,"Legacy 500, ~17.4 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+E55P,c550,"Phenom 300, ~8.2 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+E75S,e75l,E175 std 37.5 t; E175 long 38.8 t
+EA50,c550,"Eclipse 500, ~2.8 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+EC20,helicopter_light_turbine,class rate (kg/h x time in area)
+EC25,helicopter_medium,class rate (kg/h x time in area)
+EC30,helicopter_light_turbine,class rate (kg/h x time in area)
+EC35,helicopter_medium,class rate (kg/h x time in area)
+EC45,helicopter_medium,class rate (kg/h x time in area)
+EC55,helicopter_medium,class rate (kg/h x time in area)
+EN28,helicopter_light,class rate (kg/h x time in area)
+EPIC,turboprop_single,class rate (kg/h x time in area)
+F2TH,e145,"Falcon 2000, ~19.2 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+F50,turboprop_regional,class rate (kg/h x time in area)
+F900,e145,"Falcon 900, ~22.2 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+FA10,c550,"Falcon 10, ~8.5 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+FA20,e145,"Falcon 20, ~13.0 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+FA50,e145,"Falcon 50, ~18.5 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+FA7X,e170,"Falcon 7X, ~31.8 t MTOW; nearest covered by MTOW (E170 34.2 t)"
+FA8X,e170,"Falcon 8X, ~33.0 t MTOW; nearest covered by MTOW (E170 34.2 t)"
+G280,e145,"Gulfstream G280, ~19.6 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+GA5C,crj9,"Gulfstream G500, ~36.1 t MTOW; nearest covered by MTOW (CRJ9 37.4 t)"
+GA6C,glf6,"Gulfstream G600, ~42.9 t MTOW; nearest covered by MTOW (GLF6 45.2 t)"
+GA7C,e190,"Gulfstream G700, ~48.8 t MTOW; nearest covered by MTOW (E190 50.3 t)"
+GA8C,e190,"Gulfstream G800, ~52.3 t MTOW; nearest covered by MTOW (E190 50.3 t)"
+GALX,e145,"Gulfstream G200, ~16.1 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+GL5T,glf6,"Global 5000, ~41.9 t MTOW; nearest covered by MTOW (GLF6 45.2 t)"
+GL6T,glf6,"Global 6000, ~45.2 t MTOW; nearest covered by MTOW (GLF6 45.2 t)"
+GL7T,e190,"Global 7500, ~52.3 t MTOW; nearest covered by MTOW (E190 50.3 t)"
+GLEX,glf6,"Global Express, ~44.5 t MTOW; nearest covered by MTOW (GLF6 45.2 t)"
+GLF2,e170,"Gulfstream II, ~29.7 t MTOW; nearest covered by MTOW (E170 34.2 t)"
+GLF3,e170,"Gulfstream III, ~31.6 t MTOW; nearest covered by MTOW (E170 34.2 t)"
+GLF4,e170,"Gulfstream IV/G450, ~33.7 t MTOW; nearest covered by MTOW (E170 34.2 t)"
+GLF5,e75l,"Gulfstream V/G550, ~41.1 t MTOW; nearest covered by MTOW (E75L 38.8 t)"
+H25B,e145,"Hawker 800, ~12.4 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+H25C,e145,"Hawker 1000, ~12.7 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+H269,helicopter_light,class rate (kg/h x time in area)
+H500,helicopter_light_turbine,class rate (kg/h x time in area)
+H60,helicopter_medium,class rate (kg/h x time in area)
+HA4T,e145,"Hawker 4000, ~17.8 t MTOW; nearest covered by MTOW (E145 22.0 t)"
+HDJT,c550,"HondaJet, ~4.8 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+JS31,turboprop_twin,class rate (kg/h x time in area)
+JS32,turboprop_twin,class rate (kg/h x time in area)
+JS41,turboprop_twin,class rate (kg/h x time in area)
+KODI,turboprop_single,class rate (kg/h x time in area)
+LJ31,c550,"Learjet 31, ~7.0 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+LJ35,c550,"Learjet 35, ~8.3 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+LJ40,c550,"Learjet 40, ~9.8 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+LJ45,c550,"Learjet 45, ~9.8 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+LJ55,c550,"Learjet 55, ~9.3 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+LJ60,c550,"Learjet 60, ~10.7 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+LJ75,c550,"Learjet 75, ~9.8 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+M20J,piston_single,class rate (kg/h x time in area)
+M20P,piston_single,class rate (kg/h x time in area)
+M20T,piston_single,class rate (kg/h x time in area)
+MD11,b772,MD-11 273 t trijet; 777-200 297 t
+MD81,b734,MD-81 64 t; 737-400 68 t
+MD82,b734,MD-82 68 t; 737-400 68 t
+MD83,b734,MD-83 73 t; 737-400 68 t
+MD87,b734,MD-87 63 t; 737-400 68 t
+MD88,b734,MD-88 72 t; 737-400 68 t
+MD90,b734,MD-90 71 t; 737-400 68 t
+MU2,turboprop_twin,class rate (kg/h x time in area)
+P180,turboprop_twin,class rate (kg/h x time in area)
+P28A,piston_single,class rate (kg/h x time in area)
+P28B,piston_single,class rate (kg/h x time in area)
+P28R,piston_single,class rate (kg/h x time in area)
+P28T,piston_single,class rate (kg/h x time in area)
+P46T,turboprop_single,class rate (kg/h x time in area)
+PA18,piston_single,class rate (kg/h x time in area)
+PA24,piston_single,class rate (kg/h x time in area)
+PA30,piston_twin,class rate (kg/h x time in area)
+PA31,piston_twin,class rate (kg/h x time in area)
+PA32,piston_single,class rate (kg/h x time in area)
+PA34,piston_twin,class rate (kg/h x time in area)
+PA44,piston_twin,class rate (kg/h x time in area)
+PA46,piston_single,class rate (kg/h x time in area)
+PAY1,turboprop_twin,class rate (kg/h x time in area)
+PAY2,turboprop_twin,class rate (kg/h x time in area)
+PAY3,turboprop_twin,class rate (kg/h x time in area)
+PAY4,turboprop_twin,class rate (kg/h x time in area)
+PC12,turboprop_single,class rate (kg/h x time in area)
+PC24,c550,"PC-24, ~8.3 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+PC6T,turboprop_single,class rate (kg/h x time in area)
+PRM1,c550,"Premier I, ~5.7 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+R22,helicopter_light,class rate (kg/h x time in area)
+R44,helicopter_light,class rate (kg/h x time in area)
+R66,helicopter_light_turbine,class rate (kg/h x time in area)
+S22T,piston_single,class rate (kg/h x time in area)
+S61,helicopter_medium,class rate (kg/h x time in area)
+S76,helicopter_medium,class rate (kg/h x time in area)
+S92,helicopter_medium,class rate (kg/h x time in area)
+SB20,turboprop_regional,class rate (kg/h x time in area)
+SF34,turboprop_twin,class rate (kg/h x time in area)
+SF50,c550,"Cirrus Vision Jet, ~2.7 t MTOW; nearest covered by MTOW (C550 6.8 t)"
+SR20,piston_single,class rate (kg/h x time in area)
+SR22,piston_single,class rate (kg/h x time in area)
+SU95,e170,Superjet 100 46 t; OpenAP synonym kept
+SW3,turboprop_twin,class rate (kg/h x time in area)
+SW4,turboprop_twin,class rate (kg/h x time in area)
+TB20,piston_single,class rate (kg/h x time in area)
+TBM7,turboprop_single,class rate (kg/h x time in area)
+TBM8,turboprop_single,class rate (kg/h x time in area)
+TBM9,turboprop_single,class rate (kg/h x time in area)
+cat:A1,piston_single,"light (<15,500 lb): mostly piston singles"
+cat:A2,turboprop_twin,"small (15,500-75,000 lb): mixed turboprop/bizjet, turboprop_twin as middling guess"
+cat:A7,helicopter_light_turbine,rotorcraft: light turbine as middling guess
