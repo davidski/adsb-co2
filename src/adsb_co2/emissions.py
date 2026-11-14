@@ -15,7 +15,7 @@ OPENAP_VERSION = version("openap")
 CO2_PER_FUEL = 3.16  # kg CO2 per kg jet fuel / avgas
 
 # (fraction of MTOW, airspeed factor applied to fuel flow): low, central, high
-BOUNDS = ((0.75, 0.85), (0.90, 1.00), (1.00, 1.15))
+BOUNDS = ((0.75, 0.85), (0.80, 1.00), (1.00, 1.15))
 CLASS_BAND = 0.30  # tier 3 flat +/-30%
 
 

@@ -24,7 +24,7 @@ Phase (climb, level, descent) enters only through `baro_rate`. Groundspeed stand
 | Bound | Mass | Airspeed factor on fuel flow |
 |---|---|---|
 | low | 75% MTOW | ×0.85 |
-| central | 90% MTOW | ×1.00 |
+| central | 80% MTOW | ×1.00 |
 | high | 100% MTOW | ×1.15 |
 
 MTOW is `openap.prop.aircraft(type)["mtow"]`. The factor covers groundspeed-versus-airspeed (wind), applied to fuel flow rather than to the speed input. Tier 3 uses a flat ±30% around the class rate. Headline figures are central; bands are shown alongside.
@@ -48,7 +48,7 @@ Env only (see `.env.example`): `AIRCRAFT_JSON_URL`, `CENTER_LAT`, `CENTER_LON`, 
 ## Known limitations
 
 - Groundspeed used as airspeed; the ±15% band is a judgement, not a measured wind error.
-- Mass unknown; reference mass 90% MTOW with 75–100% bounds.
+- Mass unknown; reference mass 80% MTOW with 75–100% bounds. Central was 90% until 0.2.0; lowered because departures climbing through the area typically weigh 70–80% MTOW (90% read climb fuel ~10–16% high).
 - Tier 2/3 are approximations; the dashboard shows their CO₂ share. Bizjets map to airliner-derived OpenAP models (mostly C550, E145, E170), whose fuel flow differs from the real aircraft.
 - Tier 3 rates are flat kg/h: no climb/cruise distinction. Q400 (~1,000+ kg/h) is undercounted by the `turboprop_regional` rate; larger medium helicopters (S-76, AW139, S-92) and Cessna Caravan-class singles are off by similar margins.
 - 11 tier 1 types use a borrowed drag polar (above).
@@ -56,6 +56,7 @@ Env only (see `.env.example`): `AIRCRAFT_JSON_URL`, `CENTER_LAT`, `CENTER_LON`, 
 - Aircraft without ADS-B/MLAT positions are invisible.
 - Ground operations excluded.
 - Unknown type with ADS-B category A3–A6 is `unmodeled` (zero CO₂), not guessed.
+- In-area CO₂ is dominated by climbing departures (89% in the first sample), and OpenAP's climb fuel flow lapses little with altitude, so climbs may still read ~10–20% high.
 
 ## Acceptance
 
