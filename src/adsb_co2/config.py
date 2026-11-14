@@ -26,7 +26,7 @@ class Config:
     mqtt_user: str = ""
     mqtt_password: str = ""
     ha_discovery: bool = False
-    kuma_push_url: str = ""
+    heartbeat_url: str = ""
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -59,5 +59,5 @@ class Config:
             mqtt_user=get("MQTT_USER", ""),
             mqtt_password=get("MQTT_PASSWORD", ""),
             ha_discovery=e.get("HA_DISCOVERY", "false").lower() in ("1", "true", "yes"),
-            kuma_push_url=get("KUMA_PUSH_URL", ""),
+            heartbeat_url=get("HEARTBEAT_URL", ""),
         )

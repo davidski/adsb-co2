@@ -1,4 +1,4 @@
-"""Outbound notifications: MQTT (Home Assistant sensors) and the Kuma push heartbeat."""
+"""Outbound notifications: MQTT (Home Assistant sensors) and the heartbeat."""
 
 import json
 import logging
@@ -78,8 +78,8 @@ class Mqtt:
         self.client.loop_stop()
 
 
-def kuma_push(url: str) -> None:
+def heartbeat(url: str) -> None:
     try:
         urllib.request.urlopen(url, timeout=3).close()
     except OSError as e:
-        log.warning("kuma push failed: %s", e)
+        log.warning("heartbeat failed: %s", e)

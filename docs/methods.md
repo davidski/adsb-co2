@@ -43,7 +43,7 @@ Per pass: `openap_version`, `tier`, `model_type`, `model_rev` (`<package version
 
 ## Configuration
 
-Env only (see `.env.example`): `AIRCRAFT_JSON_URL`, `CENTER_LAT`, `CENTER_LON`, `RADIUS_NM`, `ALT_MIN_FT`, `ALT_MAX_FT`, `GAP_TIMEOUT_S`, `STORE_INTERVAL_S`, `PUBLISH_INTERVAL_S`, `DB_*`, `MQTT_*`, `KUMA_PUSH_URL`, `TZ`. Emissions-relevant data lives in `src/adsb_co2/data/`.
+Env only (see `.env.example`): `AIRCRAFT_JSON_URL`, `CENTER_LAT`, `CENTER_LON`, `RADIUS_NM`, `ALT_MIN_FT`, `ALT_MAX_FT`, `GAP_TIMEOUT_S`, `STORE_INTERVAL_S`, `PUBLISH_INTERVAL_S`, `DB_*`, `MQTT_*`, `HEARTBEAT_URL`, `TZ`. Emissions-relevant data lives in `src/adsb_co2/data/`.
 
 ## Known limitations
 

@@ -11,13 +11,13 @@ from functools import cache
 
 from adsb_co2 import emissions
 from adsb_co2.config import Config
-from adsb_co2.publish import Mqtt, kuma_push
+from adsb_co2.publish import Mqtt, heartbeat
 from adsb_co2.store import Store
 from adsb_co2.tracker import Tracker
 
 log = logging.getLogger("adsb_co2")
 MAX_FILE_AGE_S = 10  # older aircraft.json means readsb has stalled
-KUMA_EVERY_S = 60
+HEARTBEAT_EVERY_S = 60
 
 
 @cache
@@ -50,7 +50,7 @@ def run(cfg: Config) -> None:
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, lambda *_: stop.append(1))
     closed, next_tick = [], time.monotonic()
-    next_kuma = next_publish = next_tick
+    next_heartbeat = next_publish = next_tick
     while not stop:
         now, rows, poll_ok = poll(cfg.aircraft_json_url, time.time())
         closed += tracker.update(now, rows)
@@ -58,10 +58,10 @@ def run(cfg: Config) -> None:
         if db_ok:
             closed.clear()
         mono = time.monotonic()
-        if cfg.kuma_push_url and mono >= next_kuma:
-            next_kuma = mono + KUMA_EVERY_S
+        if cfg.heartbeat_url and mono >= next_heartbeat:
+            next_heartbeat = mono + HEARTBEAT_EVERY_S
             if poll_ok and db_ok:
-                kuma_push(cfg.kuma_push_url)
+                heartbeat(cfg.heartbeat_url)
         if mqtt and mono >= next_publish:
             next_publish = mono + cfg.publish_interval_s
             rate = sum(p.rates[1] for p in tracker.active.values())
