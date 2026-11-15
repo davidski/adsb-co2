@@ -1,0 +1,1366 @@
+{
+  "uid": "adsb-co2",
+  "title": "ADS-B CO₂",
+  "tags": [
+    "adsb",
+    "co2"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "1m",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "description": "Estimated in-flight CO₂ (kg) from aircraft inside the study area. Local in-area burn only; not full-flight, not CO₂e.",
+  "templating": {
+    "list": [
+      {
+        "name": "pass_id",
+        "label": "Pass",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "adsb-co2"
+        },
+        "refresh": 2,
+        "sort": 0,
+        "query": "SELECT id AS __value, concat(to_char(entered_at AT TIME ZONE '${TZ}', 'MM-DD HH24:MI'), ' ', COALESCE(callsign, hex), ' ', COALESCE(type, '?')) AS __text FROM passes ORDER BY entered_at DESC LIMIT 200",
+        "definition": "recent passes",
+        "current": {},
+        "options": [],
+        "includeAll": false,
+        "multi": false
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Now",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Aircraft in area",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT count(*) AS aircraft FROM passes WHERE status = 'open'"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Live CO₂ rate",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT COALESCE(sum(co2_kg / dt_s), 0) * 3.6 AS co2_t_h\nFROM (SELECT DISTINCT ON (pass_id) pass_id, ts, co2_kg,\n             extract(epoch FROM ts - lag(ts) OVER (PARTITION BY pass_id ORDER BY ts)) AS dt_s\n      FROM track_points\n      WHERE pass_id IN (SELECT id FROM passes WHERE status = 'open') AND ts > now() - interval '6 minutes'\n      ORDER BY pass_id, ts DESC) t\nWHERE ts > now() - interval '30 seconds' AND dt_s > 0"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "unit": "suffix: t/hr"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none"
+      },
+      "description": "Latest stored 5 s increment of each open pass, scaled to kg/h (central estimate). Fuel flow = CO₂ ÷ 3.16."
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "CO₂ today",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT COALESCE(sum(co2_kg), 0) / 1000 AS co2_t FROM track_points WHERE ts >= date_trunc('day', now())"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "unit": "suffix: t"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none"
+      },
+      "description": "Central estimate, kg since local midnight (database timezone)."
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "In area now",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT p.callsign, p.type, p.operator, t.alt_ft, t.gs_kt, t.vs_fpm,\n       t.co2_kg * 3600 / t.dt_s AS co2_kg_h, round((t.co2_kg * 3600 / t.dt_s / 3.16)::numeric, 0) AS fuel_kg_h, p.tier\nFROM passes p\nJOIN LATERAL (SELECT *, extract(epoch FROM ts - lag(ts) OVER (ORDER BY ts)) AS dt_s\n              FROM (SELECT * FROM track_points WHERE pass_id = p.id ORDER BY ts DESC LIMIT 2) last2\n              ORDER BY ts DESC LIMIT 1) t ON true\nWHERE p.status = 'open' ORDER BY co2_kg_h DESC NULLS LAST"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "co2_kg_h"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "options": {}
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Passes today",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT count(*) AS passes FROM passes WHERE entered_at >= date_trunc('day', now())"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Distance today (km)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 4,
+        "y": 5,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT COALESCE(sum(distance_km), 0) AS km FROM passes WHERE entered_at >= date_trunc('day', now())"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "kg CO₂ per km",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 5,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT sum(co2_kg) / NULLIF(sum(distance_km), 0) AS kg_km FROM passes WHERE $__timeFilter(entered_at)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none"
+      },
+      "description": "Over the dashboard time range: Σ CO₂ ÷ Σ distance flown inside the area."
+    },
+    {
+      "id": 9,
+      "type": "row",
+      "title": "CO₂ over time",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Hourly CO₂ (t)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT bucket AS time, co2_kg / 1000 AS co2_t, co2_low_kg / 1000 AS co2_low_t, co2_high_kg / 1000 AS co2_high_t FROM co2_hourly WHERE $__timeFilter(bucket) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "lineWidth": 1
+          },
+          "unit": "suffix: t",
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "co2_(low|high)_t"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    8
+                  ]
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "kg CO₂ (not CO₂e). Bars: central estimate. Dashed lines: low/high bounds (mass 75–100 % MTOW, airspeed factor ×0.85–1.15)."
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Daily CO₂ (t)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 10,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT bucket AS time, co2_kg / 1000 AS co2_t, co2_low_kg / 1000 AS co2_low_t, co2_high_kg / 1000 AS co2_high_t FROM co2_daily WHERE $__timeFilter(bucket) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "lineWidth": 1
+          },
+          "unit": "suffix: t",
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "co2_(low|high)_t"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    8
+                  ]
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "kg CO₂ (not CO₂e). Bars: central estimate. Dashed lines: low/high bounds (mass 75–100 % MTOW, airspeed factor ×0.85–1.15)."
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Weekly CO₂ (t)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT bucket AS time, co2_kg / 1000 AS co2_t, co2_low_kg / 1000 AS co2_low_t, co2_high_kg / 1000 AS co2_high_t FROM co2_weekly WHERE $__timeFilter(bucket) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "lineWidth": 1
+          },
+          "unit": "suffix: t",
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "co2_(low|high)_t"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    8
+                  ]
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "kg CO₂ (not CO₂e). Bars: central estimate. Dashed lines: low/high bounds (mass 75–100 % MTOW, airspeed factor ×0.85–1.15)."
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Monthly CO₂ (t)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT bucket AS time, co2_kg / 1000 AS co2_t, co2_low_kg / 1000 AS co2_low_t, co2_high_kg / 1000 AS co2_high_t FROM co2_monthly WHERE $__timeFilter(bucket) ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "lineWidth": 1
+          },
+          "unit": "suffix: t",
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "co2_(low|high)_t"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    8
+                  ]
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "kg CO₂ (not CO₂e). Bars: central estimate. Dashed lines: low/high bounds (mass 75–100 % MTOW, airspeed factor ×0.85–1.15)."
+    },
+    {
+      "id": 14,
+      "type": "row",
+      "title": "Who and what",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 26,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 15,
+      "type": "bargauge",
+      "title": "Top types by CO₂ (t)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT COALESCE(type, 'unknown') AS type, sum(co2_kg) / 1000 AS co2_t FROM passes WHERE $__timeFilter(entered_at) GROUP BY 1 ORDER BY 2 DESC LIMIT 15"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "unit": "suffix: t"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        },
+        "valueMode": "color"
+      }
+    },
+    {
+      "id": 16,
+      "type": "bargauge",
+      "title": "Top operators by CO₂ (t)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 27,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT COALESCE(NULLIF(operator, ''), 'unknown') AS operator, sum(co2_kg) / 1000 AS co2_t FROM passes WHERE $__timeFilter(entered_at) GROUP BY 1 ORDER BY 2 DESC LIMIT 15"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "unit": "suffix: t"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        },
+        "valueMode": "color"
+      }
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "Passes per day",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 36,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT date_trunc('day', entered_at) AS time, count(*) AS passes FROM passes WHERE $__timeFilter(entered_at) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "hidden"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "Distance per day (km)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 36,
+        "w": 12,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "time_series",
+          "rawSql": "SELECT date_trunc('day', entered_at) AS time, sum(distance_km) AS distance_km FROM passes WHERE $__timeFilter(entered_at) GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "hidden"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "type": "row",
+      "title": "Passes",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 20,
+      "type": "table",
+      "title": "Passes (click id to drill down)",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 44,
+        "w": 24,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT id, entered_at, callsign, hex, reg, type, operator, status, tier, duration_s, distance_km,\n       co2_kg, co2_low_kg, co2_high_kg, co2_kg / NULLIF(distance_km, 0) AS kg_per_km\nFROM passes WHERE $__timeFilter(entered_at) ORDER BY entered_at DESC LIMIT 500"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "id"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Show track",
+                    "url": "/d/adsb-co2?var-pass_id=${__value.raw}&${__url_time_range}"
+                  }
+                ]
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "duration_s"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 21,
+      "type": "geomap",
+      "title": "Track for pass $pass_id",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 54,
+        "w": 12,
+        "h": 11
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT ts AS time, lat AS latitude, lon AS longitude, alt_ft, co2_kg FROM track_points WHERE pass_id = ${pass_id:raw} ORDER BY ts"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "view": {
+          "id": "coords",
+          "lat": ${CENTER_LAT},
+          "lon": ${CENTER_LON},
+          "zoom": 9
+        },
+        "controls": {
+          "showZoom": true,
+          "mouseWheelZoom": true
+        },
+        "basemap": {
+          "type": "default",
+          "name": "Basemap"
+        },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "Track",
+            "config": {
+              "showLegend": false,
+              "style": {
+                "size": {
+                  "fixed": 4
+                },
+                "color": {
+                  "field": "alt_ft"
+                }
+              }
+            },
+            "location": {
+              "mode": "coords",
+              "latitude": "latitude",
+              "longitude": "longitude"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 22,
+      "type": "trend",
+      "title": "Cumulative CO₂ for pass $pass_id",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 54,
+        "w": 12,
+        "h": 11
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT extract(epoch FROM ts - min(ts) OVER ())::int AS seconds_in_area,\n       sum(co2_kg) OVER (ORDER BY ts) AS cumulative_co2_kg\nFROM track_points WHERE pass_id = ${pass_id:raw} ORDER BY ts"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "unit": "short",
+          "custom": {
+            "axisLabel": "Cumulative CO₂ (kg)"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "seconds_in_area"
+            },
+            "properties": [
+              {
+                "id": "custom.axisLabel",
+                "value": "Time in area (s)"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "xField": "seconds_in_area",
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        }
+      },
+      "description": "Central estimate, summed from stored 5 s increments."
+    },
+    {
+      "id": 23,
+      "type": "row",
+      "title": "Data quality",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 65,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 24,
+      "type": "bargauge",
+      "title": "CO₂ share by model tier",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 66,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT t.tier, COALESCE(100 * sum(p.co2_kg) / NULLIF(sum(sum(p.co2_kg)) OVER (), 0), 0) AS share\nFROM (VALUES (1, 'openap'), (2, 'mapped'), (3, 'category'), (4, 'unmodeled')) AS t(ord, tier)\nLEFT JOIN passes p ON p.tier = t.tier AND $__timeFilter(p.entered_at)\nGROUP BY t.ord, t.tier ORDER BY t.ord"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 0,
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "",
+          "values": true
+        },
+        "valueMode": "color"
+      },
+      "description": "openap = native model; mapped = nearest covered type; category = flat kg/h by class. Tiers 2–3 are approximations."
+    },
+    {
+      "id": 25,
+      "type": "stat",
+      "title": "Incomplete",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 66,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT count(*) FILTER (WHERE status = 'incomplete')::float / NULLIF(count(*) FILTER (WHERE status <> 'open'), 0) AS rate FROM passes WHERE $__timeFilter(entered_at)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none"
+      },
+      "description": "Share of finished passes that lost reception inside the area instead of being seen leaving. Their CO₂ is undercounted."
+    },
+    {
+      "id": 26,
+      "type": "stat",
+      "title": "Unmodeled",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 66,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT count(*) AS unmodeled FROM passes WHERE tier = 'unmodeled' AND $__timeFilter(entered_at)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none"
+      },
+      "description": "Passes with no type and no usable ADS-B category; counted with zero CO₂."
+    },
+    {
+      "id": 27,
+      "type": "stat",
+      "title": "Max gap",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 66,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT max(max_gap_s) AS max_gap_s FROM passes WHERE $__timeFilter(entered_at)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none"
+      },
+      "description": "Longest reception gap within any pass. Gaps under 5 min are interpolated."
+    },
+    {
+      "id": 28,
+      "type": "table",
+      "title": "Largest gaps",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 70,
+        "w": 16,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT id, entered_at, callsign, type, status, max_gap_s, duration_s FROM passes WHERE $__timeFilter(entered_at) ORDER BY max_gap_s DESC NULLS LAST LIMIT 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {},
+      "description": "Gaps under 5 min are bridged by interpolation."
+    },
+    {
+      "id": 29,
+      "type": "table",
+      "title": "Unmodeled types",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 66,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT COALESCE(type, 'none') AS type, category, count(*) AS passes FROM passes WHERE tier = 'unmodeled' AND $__timeFilter(entered_at) GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 10"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    }
+  ]
+}
