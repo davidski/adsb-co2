@@ -14,8 +14,11 @@ DATA = Path(__file__).parent / "data"
 OPENAP_VERSION = version("openap")
 CO2_PER_FUEL = 3.16  # kg CO2 per kg jet fuel / avgas
 
-# (fraction of MTOW, airspeed factor applied to fuel flow): low, central, high
-BOUNDS = ((0.75, 0.85), (0.80, 1.00), (1.00, 1.15))
+MASS_FRACTIONS = (0.75, 0.80, 1.00)  # of MTOW: low, central, high
+# +/- factor on fuel flow for speed error: groundspeed alone carries the full wind;
+# model-wind airspeed leaves only the wind model's error
+SPEED_BAND_GS = 0.15
+SPEED_BAND_TAS = 0.05
 CLASS_BAND = 0.30  # tier 3 flat +/-30%
 
 
@@ -70,19 +73,22 @@ class FlowModel:
     def __init__(self, tier: str, model_type: str | None):
         self.tier, self.model_type = tier, model_type
 
-    def rate_kg_s(self, alt_ft: float, gs_kt: float, vs_fpm: float) -> tuple[float, float, float]:
-        """Fuel kg/s as (low, central, high)."""
+    def rate_kg_s(
+        self, alt_ft: float, speed_kt: float, vs_fpm: float, is_tas: bool = False
+    ) -> tuple[float, float, float]:
+        """Fuel kg/s as (low, central, high); speed is TAS when is_tas, else groundspeed."""
         if self.tier == "category":
             c = RATES_KG_H[self.model_type] / 3600
             return c * (1 - CLASS_BAND), c, c * (1 + CLASS_BAND)
         if self.tier == "unmodeled":
             return 0.0, 0.0, 0.0
         ff, mtow = _fuel_flow(self.model_type)
-        # ponytail: groundspeed stands in for TAS; the band's airspeed factor covers wind
-        tas = max(gs_kt, 30.0)  # OpenAP overflows to NaN near 0 kt
+        tas = max(speed_kt, 30.0)  # OpenAP overflows to NaN near 0 kt
         alt = max(alt_ft, 0.0)
         k_cal = CALIBRATION.get(self.model_type, 1.0)
+        band = SPEED_BAND_TAS if is_tas else SPEED_BAND_GS
         low, mid, high = (
-            float(ff.enroute(mtow * m, tas, alt, vs_fpm)) * k * k_cal for m, k in BOUNDS
+            float(ff.enroute(mtow * m, tas, alt, vs_fpm)) * k * k_cal
+            for m, k in zip(MASS_FRACTIONS, (1 - band, 1.0, 1 + band), strict=True)
         )
         return low, mid, high

@@ -9,15 +9,21 @@ import urllib.request
 from datetime import datetime
 from functools import cache
 
-from adsb_co2 import emissions
+import psycopg
+
+from adsb_co2 import emissions, wind
 from adsb_co2.config import Config
 from adsb_co2.publish import Mqtt, heartbeat
 from adsb_co2.store import Store
-from adsb_co2.tracker import Tracker
+from adsb_co2.tracker import Tracker, groundspeed
+from adsb_co2.wind import Winds
 
 log = logging.getLogger("adsb_co2")
 MAX_FILE_AGE_S = 10  # older aircraft.json means readsb has stalled
 HEARTBEAT_EVERY_S = 60
+WIND_REFRESH_S = 3600  # GFS updates every 6 h; hourly picks up new runs soon enough
+WIND_RETRY_S = 300
+WIND_TIMEOUT_S = 10  # the fetch blocks the poll loop
 
 
 @cache
@@ -44,13 +50,16 @@ def poll(url: str, wall: float) -> tuple[float, list[dict], bool]:
 
 
 def run(cfg: Config) -> None:
-    store, tracker = Store(cfg), Tracker(cfg, new_model)
+    winds = Winds()
+    store = Store(cfg)
+    tracker = Tracker(cfg, new_model, winds.airspeed if cfg.wind else groundspeed)
+    unsaved_winds: dict = {}
     mqtt = Mqtt(cfg) if cfg.mqtt_host else None
     stop = []
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, lambda *_: stop.append(1))
     closed, next_tick = [], time.monotonic()
-    next_heartbeat = next_publish = next_tick
+    next_heartbeat = next_publish = next_wind = next_tick
     while not stop:
         now, rows, poll_ok = poll(cfg.aircraft_json_url, time.time())
         closed += tracker.update(now, rows)
@@ -58,6 +67,22 @@ def run(cfg: Config) -> None:
         if db_ok:
             closed.clear()
         mono = time.monotonic()
+        if cfg.wind and mono >= next_wind:
+            try:
+                got = wind.fetch(cfg.center_lat, cfg.center_lon, timeout=WIND_TIMEOUT_S)
+                winds.update(got)
+                unsaved_winds.update(got)
+                next_wind = mono + WIND_REFRESH_S
+            except (OSError, ValueError, KeyError) as e:
+                log.warning("wind fetch failed, using groundspeed: %s", e)
+                next_wind = mono + WIND_RETRY_S
+        if unsaved_winds and db_ok:
+            try:
+                store.save_winds(unsaved_winds)
+                unsaved_winds.clear()
+            except psycopg.Error as e:
+                log.warning("wind save failed: %s", e)
+                store.close()
         if cfg.heartbeat_url and mono >= next_heartbeat:
             next_heartbeat = mono + HEARTBEAT_EVERY_S
             if poll_ok and db_ok:
@@ -98,5 +123,16 @@ def main() -> None:
     if args.cmd == "run":
         run(cfg)
     else:
-        n = Store(cfg).recompute(args.since)
+        store, winds = Store(cfg), None
+        if cfg.wind:
+            gaps = store.wind_gap_days(args.since)
+            if gaps:
+                try:
+                    got = wind.fetch(cfg.center_lat, cfg.center_lon, gaps[0], gaps[-1])
+                    store.save_winds(got, overwrite=False)  # keep hours the collector stored
+                    log.info("backfilled winds %s..%s (%d hours)", gaps[0], gaps[-1], len(got))
+                except (OSError, ValueError, KeyError) as e:
+                    log.warning("wind backfill failed, those hours use groundspeed: %s", e)
+            winds = Winds(store.load_winds())
+        n = store.recompute(args.since, winds)
         log.info("recomputed %d passes", n)

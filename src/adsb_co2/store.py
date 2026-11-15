@@ -2,14 +2,16 @@
 
 import logging
 import time
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import psycopg
+from psycopg.types.json import Jsonb
 
 from adsb_co2 import emissions
 from adsb_co2.config import Config
 from adsb_co2.tracker import Pass, Pt
+from adsb_co2.wind import Profile, Winds
 
 log = logging.getLogger(__name__)
 SCHEMA = (Path(__file__).parent / "schema.sql").read_text()
@@ -120,9 +122,21 @@ class Store:
                     ),
                 )
                 cur.executemany(
-                    "INSERT INTO track_points VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                    "INSERT INTO track_points"
+                    " (pass_id, ts, lat, lon, alt_ft, gs_kt, vs_fpm, co2_kg, trk_deg)"
+                    " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     [
-                        (pid, ts(pt.t), pt.lat, pt.lon, round(pt.alt), pt.gs, round(pt.vs), f * K)
+                        (
+                            pid,
+                            ts(pt.t),
+                            pt.lat,
+                            pt.lon,
+                            round(pt.alt),
+                            pt.gs,
+                            round(pt.vs),
+                            f * K,
+                            pt.trk,
+                        )
                         for pt, f in p.pending
                     ],
                 )
@@ -135,9 +149,40 @@ class Store:
             "SELECT coalesce(sum(co2_kg), 0) FROM track_points WHERE ts >= date_trunc('day', now())"
         ).fetchone()[0]
 
-    def recompute(self, since: datetime | None) -> int:
+    def save_winds(self, profiles: dict[int, Profile], overwrite: bool = True) -> None:
+        """Upsert hourly profiles; overwrite=False only fills hours not stored yet."""
+        on_conflict = (
+            "UPDATE SET profile = excluded.profile, fetched_at = now()" if overwrite else "NOTHING"
+        )
+        with self.conn.transaction(), self.conn.cursor() as cur:
+            cur.executemany(
+                "INSERT INTO winds (hour, profile) VALUES (%s, %s)"
+                f" ON CONFLICT (hour) DO {on_conflict}",
+                [(ts(h), Jsonb(prof)) for h, prof in profiles.items()],
+            )
+
+    def load_winds(self) -> dict[int, Profile]:
+        rows = self.conn.execute("SELECT hour, profile FROM winds").fetchall()
+        return {int(h.timestamp()): [tuple(x) for x in prof] for h, prof in rows}
+
+    def wind_gap_days(self, since: datetime | None) -> list[date]:
+        """UTC days with stored track points but fewer than 24 stored wind hours."""
+        if self.conn is None:
+            self.connect()
+        rows = self.conn.execute(
+            "SELECT d::date FROM (SELECT DISTINCT date_trunc('day', ts AT TIME ZONE 'UTC') AS d"
+            " FROM track_points WHERE ts >= %s) days"
+            " WHERE (SELECT count(*) FROM winds WHERE hour >= d AT TIME ZONE 'UTC'"
+            "        AND hour < (d + interval '1 day') AT TIME ZONE 'UTC') < 24 ORDER BY 1",
+            (since or datetime.min.replace(tzinfo=UTC),),
+        ).fetchall()
+        return [r[0] for r in rows]
+
+    def recompute(self, since: datetime | None, winds: Winds | None = None) -> int:
         """Re-run stored passes from their track points under the current model."""
-        self.connect()
+        if self.conn is None:
+            self.connect()
+        airspeed = winds.airspeed if winds else None
         passes = self.conn.execute(
             "SELECT id, type, category FROM passes WHERE status <> 'open' AND entered_at >= %s"
             " ORDER BY id",
@@ -146,13 +191,15 @@ class Store:
         for pid, type_code, category in passes:
             tier, model_type = emissions.resolve(type_code, category)
             p = Pass({}, tier, model_type, emissions.FlowModel(tier, model_type), 0)
+            if airspeed:
+                p.airspeed = airspeed
             rows = self.conn.execute(
-                "SELECT ts, lat, lon, alt_ft, gs_kt, vs_fpm FROM track_points"
+                "SELECT ts, lat, lon, alt_ft, gs_kt, vs_fpm, trk_deg FROM track_points"
                 " WHERE pass_id=%s ORDER BY ts",
                 (pid,),
             ).fetchall()
-            for t, lat, lon, alt, gs, vs in rows:
-                p.add(Pt(t.timestamp(), lat, lon, alt, gs, vs))
+            for t, lat, lon, alt, gs, vs, trk in rows:
+                p.add(Pt(t.timestamp(), lat, lon, alt, gs, vs, trk))
             if len(p.pending) != len(rows):
                 raise RuntimeError(f"pass {pid}: {len(rows)} points, {len(p.pending)} stored")
             with self.conn.transaction(), self.conn.cursor() as cur:

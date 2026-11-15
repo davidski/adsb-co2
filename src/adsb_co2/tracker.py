@@ -24,6 +24,12 @@ class Pt:
     alt: float
     gs: float
     vs: float
+    trk: float | None = None  # true track over ground, degrees
+
+
+def groundspeed(pt: Pt) -> tuple[float, bool]:
+    """Default airspeed source: (speed kt, is_tas)."""
+    return pt.gs, False
 
 
 def haversine_km(a: Pt, b: Pt) -> float:
@@ -35,8 +41,17 @@ def haversine_km(a: Pt, b: Pt) -> float:
     return 2 * R_EARTH_KM * math.asin(math.sqrt(h))
 
 
+def bearing_deg(a: Pt, b: Pt) -> float:
+    p1, p2, dl = math.radians(a.lat), math.radians(b.lat), math.radians(b.lon - a.lon)
+    y = math.sin(dl) * math.cos(p2)
+    x = math.cos(p1) * math.sin(p2) - math.sin(p1) * math.cos(p2) * math.cos(dl)
+    return math.degrees(math.atan2(y, x)) % 360
+
+
 def lerp(a: Pt, b: Pt, f: float) -> Pt:
-    return Pt(*(x + f * (y - x) for x, y in zip(vars(a).values(), vars(b).values(), strict=True)))
+    fields = ("t", "lat", "lon", "alt", "gs", "vs")
+    # track is an angle: interpolating 359 -> 1 linearly is wrong, so take the later fix's
+    return Pt(*(getattr(a, k) + f * (getattr(b, k) - getattr(a, k)) for k in fields), trk=b.trk)
 
 
 @dataclass
@@ -44,8 +59,9 @@ class Pass:
     meta: dict  # hex, callsign, reg, type, operator, category
     tier: str
     model_type: str | None
-    model: object  # FlowModel-like: rate_kg_s(alt_ft, gs_kt, vs_fpm) -> (low, central, high)
+    model: object  # FlowModel-like: rate_kg_s(alt_ft, speed_kt, vs_fpm, is_tas) -> (low, mid, high)
     store_interval: float
+    airspeed: Callable[[Pt], tuple[float, bool]] = groundspeed
     status: str = "open"
     fuel: list = field(default_factory=lambda: [0.0, 0.0, 0.0])  # low, central, high kg
     distance_km: float = 0.0
@@ -64,7 +80,10 @@ class Pass:
         """Integrate to `pt` (trapezoid = linear flow across gaps); store a point when due."""
         if self.last and pt.t <= self.last.t:
             return
-        rates = self.model.rate_kg_s(pt.alt, pt.gs, pt.vs)
+        if pt.trk is None and self.last and haversine_km(self.last, pt) > 0:
+            pt.trk = bearing_deg(self.last, pt)
+        speed, is_tas = self.airspeed(pt)
+        rates = self.model.rate_kg_s(pt.alt, speed, pt.vs, is_tas)
         if self.last:
             dt = pt.t - self.last.t
             self.max_gap_s = max(self.max_gap_s, dt)
@@ -90,9 +109,14 @@ class Pass:
 
 
 class Tracker:
-    def __init__(self, cfg: Config, new_model: Callable[[str | None, str | None], tuple]):
-        """new_model(type, category) -> (tier, model_type, model)."""
-        self.cfg, self.new_model = cfg, new_model
+    def __init__(
+        self,
+        cfg: Config,
+        new_model: Callable[[str | None, str | None], tuple],
+        airspeed: Callable[[Pt], tuple[float, bool]] = groundspeed,
+    ):
+        """new_model(type, category) -> (tier, model_type, model); airspeed(pt) -> (kt, is_tas)."""
+        self.cfg, self.new_model, self.airspeed = cfg, new_model, airspeed
         self.center = Pt(0, cfg.center_lat, cfg.center_lon, 0, 0, 0)
         self.r_km = cfg.radius_nm * KM_PER_NM
         self.active: dict[str, Pass] = {}
@@ -106,7 +130,8 @@ class Tracker:
         if not isinstance(alt, int | float):  # "ground" or missing
             return None
         vs = ac.get("baro_rate") or ac.get("geom_rate") or 0
-        return Pt(now - seen, lat, lon, alt, gs, vs)
+        trk = ac.get("track")
+        return Pt(now - seen, lat, lon, alt, gs, vs, trk if isinstance(trk, int | float) else None)
 
     def inside(self, pt: Pt) -> bool:
         c = self.cfg
@@ -177,7 +202,7 @@ class Tracker:
                 del self.active[hex_]
             elif inside:
                 tier, model_type, model = self.new_model(meta["type"], meta["category"])
-                p = Pass(meta, tier, model_type, model, self.cfg.store_interval_s)
+                p = Pass(meta, tier, model_type, model, self.cfg.store_interval_s, self.airspeed)
                 if prev and not prev[1] and pt.t - prev[0].t <= ENTRY_LOOKBACK_S:
                     p.add(lerp(prev[0], pt, self._crossing(prev[0], pt, entering=True)), fix=False)
                 p.add(pt)

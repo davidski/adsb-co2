@@ -82,3 +82,28 @@ Applied to 2026-11-14's passes as estimated before wiring, the generic-only fact
 - 737 MAX 7 and MAX 10 borrow the MAX 8 and MAX 9 rows. `c550` maps to ICAO's generic Citation (`CNJ`), so its factor is the weakest. `glf6` has no ICAO row and stays at 1.0.
 - One factor per type, taken at cruise. Climb and descent inherit it.
 - Separate from the wind bias: groundspeed stands in for true airspeed, and on 2026-11-14 eastbound cruise ran 9–35% above westbound for the same types.
+
+## Decision: keep fixed MTOW fractions (route-based mass not adopted)
+
+Prototyped on 2026-11-15 against 2026-11-14's passes. Routes came from adsb.im's routeset (adsb.lol's returned empty responses with or without a key). Mass at the aircraft's position was estimated as OEW + payload (typical seats × load factor × 100 kg, plus a cargo uplift) + ICAO trip fuel for the leg + reserves (5% of trip + 45 min cruise), capped at MTOW, minus ICAO fuel for the distance already flown.
+
+- Coverage: 278 of 537 airliner passes (66% of their fuel) had a plausible route. adsb.im found plausible routes for 90% of OpenAP-tier callsigns; adsbdb's position-checked rate was 54%.
+- Estimated mass at position: median 81% of MTOW (p10 72%, p90 90%), essentially the current central assumption.
+- Effect: central fuel +0.6% across all airliner passes (+0.9% on those with routes). Per type −8% to +6%. The low–high band narrowed from 49% to 36% of central.
+
+Not adopted: daily totals barely move, while it adds a runtime dependency (batched, cached lookups under adsb.im's terms), multi-leg leg selection, and payload assumptions that fail for freighters (767-300s came out at 96% of MTOW) and for mapped types, which borrow their stand-in's seats and OEW. OpenAP fuel flow moves about 8% per 10% of MTOW, so speed (via wind) is the larger error. Revisit if per-flight figures or narrower bands matter.
+
+## Wind: adopted
+
+Prototyped the same day: Open-Meteo's archived GFS winds for 2026-11-14 (about 38–40 kt from the west at cruise) turned each point's groundspeed into airspeed. Cruise burn, east / west, kg/h at central mass:
+
+| Type | Groundspeed | Gap | Airspeed | Gap |
+|---|---|---|---|---|
+| b77w | 8952 / 7877 | +14% | 8481 / 8140 | +4% |
+| b772 | 7774 / 6558 | +19% | 7326 / 6762 | +8% |
+| a359 | 8200 / 6061 | +35% | 7764 / 6306 | +23% |
+| a333 | 6656 / 5303 | +26% | 6168 / 5517 | +12% |
+| a21n | 2730 / 2497 | +9% | 2635 / 2517 | +5% |
+| e75l | 1896 / 1563 | +21% | 1786 / 1601 | +12% |
+
+Airliner fuel fell 2.0% (160.4 t to 157.3 t): headwinds and tailwinds mostly cancel, and the remainder is drag's square-law asymmetry. Adopted because it removes a known directional bias and lets the speed band narrow from ±15% to ±5%, at the cost of one hourly request. Some of the remaining gap is plausibly real (eastbound long-haul is heavier at this point). Implementation: [methods.md](methods.md#wind-windpy).

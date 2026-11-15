@@ -19,7 +19,7 @@ import openap
 from openap import aero
 from openap.prop import aircraft, available_aircraft
 
-from adsb_co2.emissions import BOUNDS, _fuel_flow
+from adsb_co2.emissions import MASS_FRACTIONS, _fuel_flow
 
 DIST_NM = [125, 250, 500, 750, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
@@ -66,7 +66,7 @@ def stage(fuel: dict[int, int], mtow: float) -> tuple[int, int]:
 def main() -> None:
     rows = icao_rows(sys.argv[1])
     fitted = fitted_types()
-    central_mass = BOUNDS[1][0]
+    central_mass = MASS_FRACTIONS[1]
     out = csv.writer(sys.stdout, lineterminator="\n")
     header = ["type", "curve", "icao", "stage_nm", "icao_kg_h", "openap_kg_h", "ratio", "factor"]
     out.writerow(header)
