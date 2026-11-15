@@ -33,6 +33,8 @@ docker exec <collector> adsb-co2 recompute     # same, inside the running contai
 
 The schema (`src/adsb_co2/schema.sql`) is applied idempotently on connect. Passes left `open` by a previous run are closed as `incomplete` on startup. The `co2_hourly`, `co2_daily`, `co2_weekly` and `co2_monthly` views bucket in the session time zone; for Grafana set it on its role: `ALTER ROLE grafana_ro SET timezone = '<TZ>'`. A `grafana_ro` role, if it exists, gets `SELECT` on every connect.
 
+A Grafana dashboard template and the script that renders it for your instance are described in [`docs/grafana.md`](docs/grafana.md).
+
 Image: `ghcr.io/davidski/adsb-co2` (built from `Dockerfile` on push to `main`).
 
 ## Development
