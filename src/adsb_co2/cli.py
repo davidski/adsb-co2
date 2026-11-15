@@ -91,7 +91,6 @@ def run(cfg: Config) -> None:
             next_publish = mono + cfg.publish_interval_s
             rate = sum(p.rates[1] for p in tracker.active.values())
             values = {
-                "adsb_aircraft_in_area": len(tracker.active),
                 "adsb_co2_rate_kg_h": rate * emissions.CO2_PER_FUEL * 3600,
             }
             if db_ok:
