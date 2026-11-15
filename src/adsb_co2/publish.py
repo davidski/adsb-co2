@@ -14,6 +14,7 @@ SENSORS = {
     "adsb_co2_today_kg": {
         "name": "ADS-B CO2 today",
         "unit_of_measurement": "kg",
+        "device_class": "weight",  # lets HA convert the display unit (no tonne in HA)
         "state_class": "total_increasing",
         "icon": "mdi:molecule-co2",
     },
