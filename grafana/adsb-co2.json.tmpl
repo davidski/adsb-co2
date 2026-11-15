@@ -1313,7 +1313,7 @@
       "gridPos": {
         "x": 8,
         "y": 70,
-        "w": 16,
+        "w": 12,
         "h": 4
       },
       "targets": [
@@ -1335,6 +1335,53 @@
       },
       "options": {},
       "description": "Gaps under 5 min are bridged by interpolation."
+    },
+    {
+      "id": 30,
+      "type": "stat",
+      "title": "Wind-corrected",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "adsb-co2"
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 70,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "adsb-co2"
+          },
+          "editorMode": "code",
+          "rawQuery": true,
+          "format": "table",
+          "rawSql": "SELECT avg(CASE WHEN (t.trk_deg IS NOT NULL OR t.prev_ts IS NOT NULL)\n                 AND EXISTS (SELECT 1 FROM winds w\n                             WHERE w.hour BETWEEN t.ts - interval '60 minutes' AND t.ts + interval '60 minutes')\n            THEN 1.0 ELSE 0.0 END) AS wind_share\nFROM (SELECT tp.ts, tp.trk_deg, lag(tp.ts) OVER (PARTITION BY tp.pass_id ORDER BY tp.ts) AS prev_ts\n      FROM track_points tp JOIN passes p ON p.id = tp.pass_id\n      WHERE p.tier IN ('openap', 'mapped') AND $__timeFilter(tp.ts)) t"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none"
+      },
+      "description": "Share of OpenAP/mapped track points with a wind hour within 60 min and a known track (stored, or derived from the previous point): the points whose fuel uses airspeed rather than groundspeed. Near 100% normally; a drop means wind fetches are failing. A pass's first point often lacks a track. Reflects stored winds, so points written while a fetch was failing count once the hour is backfilled."
     },
     {
       "id": 29,
