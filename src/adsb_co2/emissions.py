@@ -27,6 +27,8 @@ def _read(name: str) -> list[dict]:
 NATIVE = frozenset(available_aircraft())
 TYPE_MAP = {r["type"]: r["maps_to"] for r in _read("type_map.csv")}
 RATES_KG_H = {r["class"]: float(r["kg_per_h"]) for r in _read("fuel_rates.csv")}
+# ICAO-derived cruise correction for OpenAP types on the generic fuel curve; docs/calibration.md
+CALIBRATION = {r["type"]: float(r["factor"]) for r in _read("calibration.csv")}
 
 
 def model_rev() -> str:
@@ -35,7 +37,7 @@ def model_rev() -> str:
     except PackageNotFoundError:
         pkg = "dev"
     h = hashlib.sha256()
-    for name in ("type_map.csv", "fuel_rates.csv"):
+    for name in ("type_map.csv", "fuel_rates.csv", "calibration.csv"):
         h.update((DATA / name).read_bytes())
     return f"{pkg}+{h.hexdigest()[:8]}"
 
@@ -79,5 +81,8 @@ class FlowModel:
         # ponytail: groundspeed stands in for TAS; the band's airspeed factor covers wind
         tas = max(gs_kt, 30.0)  # OpenAP overflows to NaN near 0 kt
         alt = max(alt_ft, 0.0)
-        low, mid, high = (float(ff.enroute(mtow * m, tas, alt, vs_fpm)) * k for m, k in BOUNDS)
+        k_cal = CALIBRATION.get(self.model_type, 1.0)
+        low, mid, high = (
+            float(ff.enroute(mtow * m, tas, alt, vs_fpm)) * k * k_cal for m, k in BOUNDS
+        )
         return low, mid, high
