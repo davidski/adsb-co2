@@ -18,16 +18,18 @@ SENSORS = {
         "state_class": "total_increasing",
         "icon": "mdi:molecule-co2",
     },
-    "adsb_aircraft_in_area": {
-        "name": "ADS-B aircraft in area",
-        "state_class": "measurement",
-        "icon": "mdi:airplane",
-    },
     "adsb_co2_rate_kg_h": {
         "name": "ADS-B CO2 rate",
         "unit_of_measurement": "kg/h",
         "state_class": "measurement",
         "icon": "mdi:molecule-co2",
+    },
+    "adsb_co2_radius": {  # static config, published retained on connect
+        "name": "ADS-B CO2 radius",
+        "unit_of_measurement": "nmi",
+        "device_class": "distance",
+        "entity_category": "diagnostic",
+        "icon": "mdi:radius-outline",
     },
 }
 
@@ -35,6 +37,7 @@ SENSORS = {
 class Mqtt:
     def __init__(self, cfg: Config):
         self.discovery = cfg.ha_discovery
+        self.radius_nm = cfg.radius_nm
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="adsb-co2")
         if cfg.mqtt_user:
             self.client.username_pw_set(cfg.mqtt_user, cfg.mqtt_password)
@@ -49,6 +52,7 @@ class Mqtt:
             log.warning("mqtt connect refused: %s", reason_code)
             return
         client.publish(STATUS_TOPIC, "online", retain=True)
+        client.publish("adsb_co2/adsb_co2_radius/state", f"{self.radius_nm:g}", retain=True)
         if self.discovery:
             client.subscribe("homeassistant/status")
             self._discover()

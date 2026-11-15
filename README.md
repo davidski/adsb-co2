@@ -1,6 +1,6 @@
 # adsb-co2
 
-Estimates CO₂ from aircraft flying within a fixed radius of an ADS-B receiver. It polls a readsb/tar1090 `aircraft.json` at 1 Hz, tracks each aircraft's **pass** through the study area, integrates fuel burned while inside (OpenAP, with fallbacks for types it doesn't cover), and stores per-pass records and 5 s track points in Postgres. It also publishes three Home Assistant sensors over MQTT and pings an optional heartbeat URL (any monitor that accepts a GET).
+Estimates CO₂ from aircraft flying within a fixed radius of an ADS-B receiver. It polls a readsb/tar1090 `aircraft.json` at 1 Hz, tracks each aircraft's **pass** through the study area, integrates fuel burned while inside (OpenAP, with fallbacks for types it doesn't cover), and stores per-pass records and 5 s track points in Postgres. It also publishes Home Assistant sensors over MQTT (CO₂ today, CO₂ rate, and the configured radius as a diagnostic) and pings an optional heartbeat URL (any monitor that accepts a GET).
 
 Local in-flight CO₂ only, reported as CO₂ mass (kg), never CO₂-equivalent. Estimates carry low/central/high bounds (mass and airspeed assumptions); the central value is the headline.
 
