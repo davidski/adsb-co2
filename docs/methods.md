@@ -10,7 +10,7 @@ Per 1 Hz step inside the study area: `fuel_kg += ff × dt`, `co2_kg = 3.16 × fu
 
 | Tier | Source | Fuel flow |
 |---|---|---|
-| 1 `openap` | ICAO type is one of OpenAP 2.6.2's 37 aircraft | `FuelFlow.enroute(mass, tas=gs, alt=alt_baro, vs=baro_rate)` |
+| 1 `openap` | ICAO type is one of OpenAP 2.6.2's 37 aircraft | `FuelFlow.enroute(mass, tas=gs, alt=alt_baro, vs=baro_rate)` × the type's factor in `calibration.csv` |
 | 2 `mapped` | `type_map.csv` maps the type to an OpenAP type (nearest by MTOW, or same family) | as tier 1, on the mapped type |
 | 3 `category` | `type_map.csv` maps the type to a class, else ADS-B `category` (`cat:A1` rows) selects one | flat kg/h from `fuel_rates.csv` |
 | `unmodeled` | no type and no usable category | zero CO₂, counted in quality stats |
@@ -37,9 +37,11 @@ kg/h per class with a source citation per row. Mostly manufacturer or POH figure
 
 OpenAP 2.6.2 lists 37 aircraft. Only 26 have their own drag polar; 11 (A19N, A21N, A318, B37M, B39M, B3XM, B763, B773, CRJ9, E145, E170) construct only with `use_synonym=True`, which borrows a sibling's drag polar (A20N, A20N, A319, B38M, B38M, B38M, B752, B77W, E75L, E75L, E75L) while keeping the type's own MTOW and engine. These count as tier 1 but are weaker than the other 26.
 
+Separately, only some types have their own OpenAP fuel curve; the rest use a default curve scaled by take-off fuel flow, which was 0.6–1.6× ICAO's cruise burn. `calibration.csv` corrects those generic-curve types against the ICAO fuel consumption table; see [calibration.md](calibration.md).
+
 ### Provenance and recompute
 
-Per pass: `openap_version`, `tier`, `model_type`, `model_rev` (`<package version>+<first 8 hex of sha256 over type_map.csv + fuel_rates.csv>`). Editing either CSV changes `model_rev`. `adsb-co2 recompute [--since …]` re-runs stored passes from their track points. OpenAP is never automerged; an upgrade is reviewed and recompute is a deliberate step.
+Per pass: `openap_version`, `tier`, `model_type`, `model_rev` (`<package version>+<first 8 hex of sha256 over type_map.csv + fuel_rates.csv + calibration.csv>`). Editing any of them changes `model_rev`. `adsb-co2 recompute [--since …]` re-runs stored passes from their track points. OpenAP is never automerged; an upgrade is reviewed and recompute is a deliberate step.
 
 ## Configuration
 

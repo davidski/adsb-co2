@@ -28,3 +28,12 @@ def test_emissions():
     assert abs(mid * 3600 - e.RATES_KG_H["piston_single"]) < 1e-9 and abs(high / mid - 1.3) < 1e-9
     assert e.FlowModel("unmodeled", None).rate_kg_s(0, 0, 0) == (0.0, 0.0, 0.0)
     assert e.model_rev().count("+") == 1
+    # calibration: every native type has a factor, fitted curves are untouched,
+    # and a generic-curve type is scaled by exactly its factor
+    assert set(e.CALIBRATION) == set(e.NATIVE)
+    assert e.CALIBRATION["a320"] == 1.0 and e.CALIBRATION["b77w"] < 0.8
+    cal, e.CALIBRATION["b77w"] = e.CALIBRATION["b77w"], 1.0
+    raw = e.FlowModel("openap", "b77w").rate_kg_s(35000, 490, 0)
+    e.CALIBRATION["b77w"] = cal
+    got = e.FlowModel("openap", "b77w").rate_kg_s(35000, 490, 0)
+    assert all(abs(g - r * cal) < 1e-12 for g, r in zip(got, raw, strict=True))
