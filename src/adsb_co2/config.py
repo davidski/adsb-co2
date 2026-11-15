@@ -27,6 +27,7 @@ class Config:
     mqtt_password: str = ""
     ha_discovery: bool = False
     heartbeat_url: str = ""
+    wind: bool = True  # Open-Meteo winds aloft for airspeed; False = groundspeed
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -60,4 +61,5 @@ class Config:
             mqtt_password=get("MQTT_PASSWORD", ""),
             ha_discovery=e.get("HA_DISCOVERY", "false").lower() in ("1", "true", "yes"),
             heartbeat_url=get("HEARTBEAT_URL", ""),
+            wind=e.get("WIND", "true").lower() in ("1", "true", "yes"),
         )

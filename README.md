@@ -20,6 +20,7 @@ Environment variables only; see [`.env.example`](.env.example). `CENTER_LAT`, `C
 | `HA_DISCOVERY` | `false` | publish retained HA discovery configs |
 | `HEARTBEAT_URL` | – | push URL, hit every minute while polling and DB writes both work |
 | `TZ` | `UTC` | session time zone for "today" and the time-bucket views |
+| `WIND` | `true` | fetch winds aloft from [Open-Meteo](https://open-meteo.com) (CC-BY 4.0) hourly to turn groundspeed into airspeed; sends the receiver location rounded to 0.5°. `false` = groundspeed |
 
 ## Run
 

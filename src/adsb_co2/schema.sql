@@ -37,6 +37,15 @@ CREATE TABLE IF NOT EXISTS track_points (
     PRIMARY KEY (pass_id, ts)
 );
 CREATE INDEX IF NOT EXISTS track_points_ts ON track_points (ts);
+ALTER TABLE track_points ADD COLUMN IF NOT EXISTS trk_deg real;  -- true track; NULL before wind
+
+-- Hourly winds aloft over the area (wind.py), kept so recompute is reproducible.
+-- profile: [[height_ft, u_kt, v_kt], ...] sorted by height; (u, v) = air velocity east, north.
+CREATE TABLE IF NOT EXISTS winds (
+    hour timestamptz PRIMARY KEY,
+    profile jsonb NOT NULL,
+    fetched_at timestamptz NOT NULL DEFAULT now()
+);
 
 -- Time totals attribute CO2 to when it was burned. Buckets use the session time zone.
 -- Low/high scale each point by its pass's low/central and high/central ratio.

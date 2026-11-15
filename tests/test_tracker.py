@@ -12,7 +12,7 @@ LON_PER_KM = math.degrees(1 / R_EARTH_KM)
 
 
 class Const:
-    def rate_kg_s(self, alt, gs, vs):
+    def rate_kg_s(self, alt, speed, vs, is_tas=False):
         return 0.5, 1.0, 2.0
 
 

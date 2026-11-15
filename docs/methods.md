@@ -17,17 +17,23 @@ Per 1 Hz step inside the study area: `fuel_kg += ff × dt`, `co2_kg = 3.16 × fu
 
 Tier 1 types take precedence over `type_map.csv`. The map exists to override OpenAP's built-in synonyms, which are crude (C525 and C550 both map to one 6.8 t model; AT72 to a jet; A310 to the A318). The collector never passes `use_synonym` for a type outside `available_aircraft()`.
 
-Phase (climb, level, descent) enters only through `baro_rate`. Groundspeed stands in for TAS (ADS-B on this receiver carries no TAS/IAS/Mach). Inputs are floored at 30 kt (OpenAP returns NaN near 0 kt) and 0 ft.
+Phase (climb, level, descent) enters only through `baro_rate`. Speed is true airspeed from groundspeed and model wind (below) when available, else groundspeed; ADS-B on this receiver carries no TAS/IAS/Mach. Inputs are floored at 30 kt (OpenAP returns NaN near 0 kt) and 0 ft.
+
+### Wind (`wind.py`)
+
+Hourly winds aloft come from [Open-Meteo](https://open-meteo.com) (NCEP GFS, CC-BY 4.0) at 11 pressure levels (1000–150 hPa) for one point, the receiver location rounded to 0.5°. Airspeed = |ground velocity − wind|, with the wind interpolated linearly in geopotential height (clamped at the ends) at the nearest hour, and ground velocity from `gs` and readsb's `track` (bearing from the previous fix when `track` is missing). Without track, or with no wind hour within 60 min, the point falls back to groundspeed and the wider speed band.
+
+The collector refreshes the last 48 h from the forecast API hourly and stores profiles in `winds`; `recompute` fills days with missing hours from the historical-forecast archive without overwriting stored ones. On 2026-11-14 this cut the eastbound-over-westbound cruise gap from 14–35% to 4–23% for the same types and lowered airliner fuel 2%; see [calibration.md](calibration.md). `WIND=false` disables it.
 
 ### Bounds
 
-| Bound | Mass | Airspeed factor on fuel flow |
-|---|---|---|
-| low | 75% MTOW | ×0.85 |
-| central | 80% MTOW | ×1.00 |
-| high | 100% MTOW | ×1.15 |
+| Bound | Mass | Speed factor on fuel flow: airspeed | groundspeed fallback |
+|---|---|---|---|
+| low | 75% MTOW | ×0.95 | ×0.85 |
+| central | 80% MTOW | ×1.00 | ×1.00 |
+| high | 100% MTOW | ×1.05 | ×1.15 |
 
-MTOW is `openap.prop.aircraft(type)["mtow"]`. The factor covers groundspeed-versus-airspeed (wind), applied to fuel flow rather than to the speed input. Tier 3 uses a flat ±30% around the class rate. Headline figures are central; bands are shown alongside.
+MTOW is `openap.prop.aircraft(type)["mtow"]`. The speed factor is applied to fuel flow rather than to the speed input. With model wind it covers the wind model's error (assumed ~5–10 kt at cruise, not measured); on groundspeed it covers the whole wind. Tier 3 uses a flat ±30% around the class rate. Headline figures are central; bands are shown alongside.
 
 ### Tier 3 class rates (`fuel_rates.csv`)
 
